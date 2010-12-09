@@ -23,12 +23,14 @@ get '/style.css' do
 end
 
 helpers do
-  def is_it_shabbos_yet(shabbos_ical_parsed, offset)
+  def is_it_shabbos_yet(shabbos_ical_parsed, tzid)
     @shabbos_event = shabbos_ical_parsed
     @shabbos_start = @shabbos_event.first.events.first.dtstart
     @shabbos_end = @shabbos_event.first.events.first.dtend
     @today = DateTime.now.cwday
-		@local_time = DateTime.now.to_time.utc + ( 3600 * offset )
+    @local_time = DateTime.now.to_time.utc + ( 3600 * offset )
+#    @today = DateTime.civil(2010, 12, 10, 20,20,1,-5).cwday
+#    @local_time = Time.local(2010,"dec",10,20,12,1)
     @location = @shabbos_event.first.events.first.location
     @shabbos_start_hr = @shabbos_start.hour.modulo(12).to_s
     @shabbos_start_min = @shabbos_start.min.to_s.rjust(2, '0')
@@ -62,12 +64,12 @@ helpers do
   end
 	
   def get_timezone(zipcode)
-		zip_lookup_url = URI.parse('http://ws.geonames.org/postalCodeLookupJSON?postalcode=' + zipcode.to_s + '&country=US')
-		zip_json = Net::HTTP.get(zip_lookup_url)
-		zip_array = JSON::parse(zip_json)['postalcodes'][0].to_hash
-		lat_long = {"lat" => zip_array['lat'], "lng" => zip_array['lng'] }
-		tz_lookup_url = URI.parse('http://ws.geonames.org/timezoneJSON?lat=' + lat_long['lat'].to_s + '&lng=' + lat_long['lng'].to_s)
-		tz_json = Net::HTTP.get(tz_lookup_url)
-		tz = JSON::parse(tz_json).to_hash['rawOffset']
-	end
+    zip_lookup_url = URI.parse('http://ws.geonames.org/postalCodeLookupJSON?postalcode=' + zipcode.to_s + '&country=US')
+    zip_json = Net::HTTP.get(zip_lookup_url)
+    zip_array = JSON::parse(zip_json)['postalcodes'][0].to_hash
+    lat_long = {"lat" => zip_array['lat'], "lng" => zip_array['lng'] }
+    tz_lookup_url = URI.parse('http://ws.geonames.org/timezoneJSON?lat=' + lat_long['lat'].to_s + '&lng=' + lat_long['lng'].to_s)
+    tz_json = Net::HTTP.get(tz_lookup_url)
+    tz = JSON::parse(tz_json).to_hash['timezoneId']
+  end
 end
